@@ -1,23 +1,44 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 
 import Card from "../UI/Card/Card";
 import classes from "./Login.module.css";
 import Button from "../UI/Button/Button";
 
+const reducer = (state, action) => {
+  if (action.type === "PASSWORD_INPUT_CHANGE") {
+    return {
+      enteredPassword: action.value,
+      passwordIsValid: action.value.trim().length > 6,
+    };
+  }
+
+  if (action.type === "PASSWORD_VALIDATE_CHANGE") {
+    return {
+      enteredPassword: state.enteredPassword,
+      passwordIsValid: action.value,
+    };
+  }
+};
+
 const Login = (props) => {
   const [enteredEmail, setEnteredEmail] = useState("");
   const [emailIsValid, setEmailIsValid] = useState();
-  const [enteredPassword, setEnteredPassword] = useState("");
-  const [passwordIsValid, setPasswordIsValid] = useState();
+  // const [enteredPassword, setEnteredPassword] = useState("");
+  // const [passwordIsValid, setPasswordIsValid] = useState();
   const [enteredCollegeName, setEnteredCollegeName] = useState("");
   const [collegeNameisValid, setCollegeNameIsvalid] = useState();
   const [formIsValid, setFormIsValid] = useState(false);
+
+  const [state, dispatch] = useReducer(reducer, {
+    enteredPassword: "",
+    passwordIsValid: null,
+  });
 
   useEffect(() => {
     const identifier = setTimeout(() => {
       setFormIsValid(
         enteredEmail.includes("@") &&
-          enteredPassword.trim().length > 6 &&
+          state.enteredPassword.trim().length > 6 &&
           enteredCollegeName.trim().length > 4
       );
       console.log("Running...");
@@ -27,14 +48,15 @@ const Login = (props) => {
       console.log("cleanup");
       clearTimeout(identifier);
     };
-  }, [enteredEmail, enteredPassword, enteredCollegeName]);
+  }, [enteredEmail, state.enteredPassword, enteredCollegeName]);
 
   const emailChangeHandler = (event) => {
     setEnteredEmail(event.target.value);
   };
 
   const passwordChangeHandler = (event) => {
-    setEnteredPassword(event.target.value);
+    dispatch({ type: "PASSWORD_INPUT_CHANGE", value: event.target.value });
+    //setEnteredPassword(event.target.value);
   };
 
   const collegeChangeHandler = (event) => {
@@ -46,7 +68,11 @@ const Login = (props) => {
   };
 
   const validatePasswordHandler = () => {
-    setPasswordIsValid(enteredPassword.trim().length > 6);
+    //setPasswordIsValid(enteredPassword.trim().length > 6);
+    dispatch({
+      type: "PASSWORD_VALIDATE_CHANGE",
+      value: state.enteredPassword.trim().length > 6,
+    });
   };
 
   const validateCollegeHandler = () => {
@@ -55,7 +81,7 @@ const Login = (props) => {
 
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onLogin(enteredEmail, enteredPassword, enteredCollegeName);
+    props.onLogin(enteredEmail, state.enteredPassword, enteredCollegeName);
   };
 
   return (
@@ -77,14 +103,14 @@ const Login = (props) => {
         </div>
         <div
           className={`${classes.control} ${
-            passwordIsValid === false ? classes.invalid : ""
+            state.passwordIsValid === false ? classes.invalid : ""
           }`}
         >
           <label htmlFor="password">Password</label>
           <input
             type="password"
             id="password"
-            value={enteredPassword}
+            value={state.enteredPassword}
             onChange={passwordChangeHandler}
             onBlur={validatePasswordHandler}
           />
